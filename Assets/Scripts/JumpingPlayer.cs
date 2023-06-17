@@ -4,18 +4,17 @@ using UnityEngine;
 
 public class JumpingPlayer : MonoBehaviour
 {
-    [SerializeField] private CharacterController characterPlayer;
+    [SerializeField] private CharacterController characterController;
     [SerializeField] private Animator jumpAnimation;
 
     [SerializeField] private LayerMask layerGround;
     [SerializeField] private Transform groundChecker;
     [SerializeField] private float radiusChecker;
+
     [SerializeField] private float maxHeight;
     [SerializeField] private float timeToMaxHeight;
-
     private Vector3 _yJumpForce;
-
-    private float jumpSpeed;
+    private float _jumpSpeed;
     private float _gravity;
 
     private void Start()
@@ -29,36 +28,33 @@ public class JumpingPlayer : MonoBehaviour
         GravityForce();
     }
 
+    private void SetGravity()
+    {
+        _gravity = (2 * maxHeight) / Mathf.Pow(timeToMaxHeight, 2);
+        _jumpSpeed = _gravity * timeToMaxHeight;
+    }
+
+    private void GravityForce()
+    {
+        _yJumpForce += _gravity * Time.deltaTime * Vector3.down;
+        characterController.Move(_yJumpForce);
+
+        if (IsGrounded() == true) _yJumpForce = Vector3.zero; 
+    }
+
     private void JumpForce()
     {
         if (IsGrounded() == true)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                _yJumpForce = jumpSpeed * Vector3.up;
-                characterPlayer.Move(_yJumpForce);
+                _yJumpForce = _jumpSpeed * Vector3.up;
+                characterController.Move(_yJumpForce);
 
                 jumpAnimation.SetBool("jump", true);
             }
         }
         else jumpAnimation.SetBool("jump", false);
-    }
-
-    private void SetGravity()
-    {
-        _gravity = (2 * maxHeight) / Mathf.Pow(timeToMaxHeight, 2);
-        jumpSpeed = _gravity * timeToMaxHeight;
-    }
-
-    private void GravityForce()
-    {
-        _yJumpForce += _gravity * Time.deltaTime * Vector3.down;
-        characterPlayer.Move(_yJumpForce);
-
-        if (IsGrounded() == true) //zera gravidade
-        {
-            _yJumpForce = Vector3.zero;
-        }
     }
 
     private bool IsGrounded()
@@ -67,5 +63,8 @@ public class JumpingPlayer : MonoBehaviour
         return isGrounded;
     }
 
-    private void OnDrawGizmos() => Gizmos.DrawWireSphere(groundChecker.position, radiusChecker);
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawSphere(groundChecker.position, radiusChecker);
+    }
 }
